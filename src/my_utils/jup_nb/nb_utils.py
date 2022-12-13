@@ -1,7 +1,9 @@
+import plotly.graph_objects
 from IPython.core.display import display
 from dash import Output
 from ipywidgets import Dropdown, Label, VBox
 from pandas.core.groupby import DataFrameGroupBy
+from plotly.subplots import make_subplots
 
 
 class DictViewer(VBox):
@@ -56,3 +58,21 @@ class GBViewer(DictViewer):
     @staticmethod
     def _dropna(df, shoulddrop=False):
         return df.dropna(how='all', axis=1) if shoulddrop else df
+
+
+def subplots(*figs) -> plotly.graph_objects.Figure:
+    """
+    Create a subplot figure from a list of figures with two columns.
+    Accepts plotly express and graph_objects figures.
+    :return:
+    """
+    ncols = 2
+    nrows = len(figs) // 2 + 1
+    fig = make_subplots(rows=nrows, cols=ncols)
+    for i, curr_fig in enumerate(figs):
+        # plots are indexed starting with 1
+        row = i // 2 + 1
+        col = i % 2 + 1
+        fig.add_trace(curr_fig.data[0], row=row, col=col)
+
+    return fig
