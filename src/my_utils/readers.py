@@ -7,12 +7,12 @@ def save_json(data: dict, path: str, indent=4, ensure_ascii=False, **kwargs):
         json.dump(data, f, indent=indent, ensure_ascii=ensure_ascii, **kwargs)
 
 
-def read_json(path: str, **kwargs):
+def read_json(path: str, **kwargs) -> dict:
     with open(path, 'r') as f:
         return json.load(f, **kwargs)
 
 
-def read_yaml(path: str):
+def read_yaml(path: str) -> dict:
     with open(path, 'r') as f:
         return yaml.safe_load(f)
 
