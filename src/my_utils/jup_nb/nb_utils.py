@@ -1,9 +1,14 @@
+import numpy as np
+from typing import Any
+
 import plotly.graph_objects
 from IPython.core.display import display
-from dash import Output
-from ipywidgets import Dropdown, Label, VBox
+from ipywidgets import Dropdown, HBox, Label, Output, VBox
 from pandas.core.groupby import DataFrameGroupBy
 from plotly.subplots import make_subplots
+import plotly.graph_objects as go
+
+from ..utils import grouped
 
 
 class DictViewer(VBox):
@@ -60,6 +65,29 @@ class GBViewer(DictViewer):
         return df.dropna(how='all', axis=1) if shoulddrop else df
 
 
+class OutputWrapper(Output):
+    """
+    Useful for converting dataframes to ipywidgets that can be displayed inside a VBox, etc.
+
+    Usage example (in jupyter notebook):
+        HBox([ Label('my dataframe:'), OutputWrapper(df) ])
+    """
+    def __init__(self, obj_to_display: Any = '', iterate=False):
+        super().__init__()
+        self.obj = None
+        self.reset(obj_to_display, iterate=iterate)
+
+    def reset(self, obj_to_display: Any = '', iterate=False):
+        self.clear_output()
+        self.obj = obj_to_display
+        with self:
+            if iterate:
+                for o in self.obj:
+                    display(o)
+            else:
+                display(self.obj)
+
+
 def subplots(*figs) -> plotly.graph_objects.Figure:
     """
     Create a subplot figure from a list of figures with two columns.
@@ -76,3 +104,31 @@ def subplots(*figs) -> plotly.graph_objects.Figure:
         fig.add_trace(curr_fig.data[0], row=row, col=col)
 
     return fig
+
+
+def sub_dfs(*dfs):
+    """
+    Stack pandas dataframes side by side with as many rows as needed based on
+    len(dfs)
+    :param dfs:
+    :return:
+    """
+    container = VBox()
+    for df_l, df_r in grouped(dfs, 2):
+        container.children += (HBox([OutputWrapper(df_l), OutputWrapper(df_r)]),)
+    return container
+
+
+def add_diagonal(fig: plotly.graph_objects.Figure, color='black', width=2):
+    max_point = max(fig.data[0]['x'].max(), fig.data[0]['y'].max())
+    fig.add_trace(go.Scatter(x=np.arange(max_point), y=np.arange(max_point), mode='lines',
+               line=dict(color=color, width=width, dash='dash')))
+    return fig
+
+
+def square_fig(fig: plotly.graph_objects.Figure):
+    max_point = max(fig.data[0]['x'].max(), fig.data[0]['y'].max())
+    fig.update_xaxes(range=[0, max_point])
+    fig.update_yaxes(range=[0, max_point])
+    return fig
+

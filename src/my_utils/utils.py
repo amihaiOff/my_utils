@@ -59,3 +59,10 @@ def col_by_kw(df: pd.DataFrame, kw: str):
     Return list of columns in df that contain kw
     """
     return [col for col in df.columns if kw in col]
+
+
+def grouped(iterable, n=2):
+    """
+    Collect data into fixed-length chunks or blocks
+    """
+    return zip(*[iter(iterable)]*n)
