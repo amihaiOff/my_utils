@@ -107,6 +107,7 @@ def subplots(*figs) -> plotly.graph_objects.Figure:
     return fig
 
 
+
 def sub_dfs(*dfs):
     """
     Stack pandas dataframes side by side with as many rows as needed based on
@@ -114,9 +115,31 @@ def sub_dfs(*dfs):
     :param dfs:
     :return:
     """
+    includes_labels = False
+    if len(dfs) % 2 == 0:
+        for elem in dfs[::2]:
+            if not isinstance(elem, str):
+                break
+        else:  # didn't break
+            includes_labels = True
+
     container = VBox()
-    for df_l, df_r in grouped(dfs, 2):
-        container.children += (HBox([OutputWrapper(df_l), OutputWrapper(df_r)]),)
+    if includes_labels:
+        dfs, labels = dfs[1::2], dfs[::2]
+        if len(dfs) % 2 == 1:
+            dfs += (None,)
+            labels += ('',)
+
+        for (df_l, df_r), (label_l, label_r) in zip(grouped(dfs, 2),
+                                                    grouped(labels, 2)):
+            container.children += (HBox([Label(label_l), OutputWrapper(df_l),
+                                         Label(label_r), OutputWrapper(df_r)]),)
+    else:
+        if len(dfs) % 2 == 1:
+            dfs = dfs + (None,)
+        for df_l, df_r in grouped(dfs, 2):
+            container.children += (HBox([OutputWrapper(df_l), OutputWrapper(df_r)]),)
+
     return container
 
 
