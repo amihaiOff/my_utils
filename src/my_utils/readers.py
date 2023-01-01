@@ -3,6 +3,10 @@ import yaml
 
 
 def save_json(data: dict, path: str, indent=4, ensure_ascii=False, **kwargs):
+    """
+    save json file. ensure_ascii=False is useful for saving unicode characters
+    and allowing for foreign language characters to be displayed
+    """
     with open(path, 'w') as f:
         json.dump(data, f, indent=indent, ensure_ascii=ensure_ascii, **kwargs)
 

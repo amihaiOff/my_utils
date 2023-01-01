@@ -1,9 +1,10 @@
 import numpy as np
 from typing import Any
 
+import pandas as pd
 import plotly.graph_objects
 from IPython.core.display import display
-from ipywidgets import Dropdown, HBox, Label, Output, VBox
+from ipywidgets import Dropdown, HBox, Label, Layout, Output, VBox
 from pandas.core.groupby import DataFrameGroupBy
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
@@ -120,6 +121,13 @@ def sub_dfs(*dfs):
 
 
 def add_diagonal(fig: plotly.graph_objects.Figure, color='black', width=2):
+    """
+    add diaglonal line (x = y) to a plotly figure
+    :param fig:
+    :param color: line color
+    :param width: line width
+    :return:
+    """
     max_point = max(fig.data[0]['x'].max(), fig.data[0]['y'].max())
     fig.add_trace(go.Scatter(x=np.arange(max_point), y=np.arange(max_point), mode='lines',
                line=dict(color=color, width=width, dash='dash')))
@@ -127,8 +135,47 @@ def add_diagonal(fig: plotly.graph_objects.Figure, color='black', width=2):
 
 
 def square_fig(fig: plotly.graph_objects.Figure):
+    """
+    Make a plotly figure square to have the same scale on both axes
+    :param fig:
+    :return:
+    """
     max_point = max(fig.data[0]['x'].max(), fig.data[0]['y'].max())
     fig.update_xaxes(range=[0, max_point])
     fig.update_yaxes(range=[0, max_point])
     return fig
 
+
+def col_intersection(colA: pd.Series, colB: pd.Series) -> set:
+    """
+    Return a series with the intersection of two series.
+    :param colA:
+    :param colB:
+    :return:
+    """
+    return set(colA).intersection(set(colB))
+
+
+def df_sneak_peak(df: pd.DataFrame, n_rows: int = 10) -> None:
+    """
+    Display a sneak peak of a dataframe -
+    1. first n (def=10) rows
+    2. Shape
+    3. Describe
+    4. Column dtypes
+    :param df:
+    :param n_rows: Number of rows from the top to display
+    :return:
+    """
+    h = HBox([VBox([Label('Head:'),
+                    OutputWrapper(df.head(n_rows)),
+                    Label('Describe:'),
+                    OutputWrapper(df.describe())],
+                   layout=Layout(overflow='scroll hidden', max_width='65%')),
+              VBox([Label('Dtypes:'),
+                    OutputWrapper(df.dtypes),
+                    Label('Shape:'),
+                    OutputWrapper(df.shape)],
+                   layout=Layout(overflow='scroll hidden'))])
+    h.layout.flex = '1 1 auto'
+    display(h)
