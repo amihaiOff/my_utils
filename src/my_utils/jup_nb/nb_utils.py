@@ -1,6 +1,12 @@
-import numpy as np
-from typing import Any
+import json
+import yaml
+import os
 
+import numpy as np
+from typing import Any, Union
+from json import dumps
+
+from IPython.display import display, HTML, Markdown
 import pandas as pd
 import plotly.graph_objects
 from IPython.core.display import display
@@ -202,3 +208,100 @@ def df_sneak_peak(df: pd.DataFrame, n_rows: int = 10) -> None:
                    layout=Layout(overflow='scroll hidden'))])
     h.layout.flex = '1 1 auto'
     display(h)
+
+
+def load_file_to_dict(file_path: str) -> dict:
+    """
+    Loads a JSON or YAML file (local or S3) into a dictionary.
+
+    Args:
+        file_path (str): Path to the file (local or S3).
+
+    Returns:
+        dict: The loaded dictionary.
+    """
+    import boto3
+    if file_path.startswith("s3://"):
+        # Load from S3
+        s3 = boto3.client("s3")
+        bucket_name, key = file_path[5:].split("/", 1)
+        obj = s3.get_object(Bucket=bucket_name, Key=key)
+        file_content = obj["Body"].read().decode("utf-8")
+    else:
+        # Load from local file system
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"File not found: {file_path}")
+        with open(file_path, "r", encoding="utf-8") as f:
+            file_content = f.read()
+
+    # Parse JSON or YAML
+    try:
+        return json.loads(file_content)
+    except json.JSONDecodeError:
+        try:
+            return yaml.safe_load(file_content)
+        except yaml.YAMLError:
+            raise ValueError("File is not valid JSON or YAML.")
+
+
+def pretty_print_dict_with_filter(
+    input_data: Union[dict, str], key_filter: str = None
+):
+    """
+    Pretty prints a dictionary in a Jupyter Lab notebook. If a key_filter is provided,
+    filters the dictionary to show only keys that contain the key_filter substring,
+    and prints them line by line with colors.
+
+    Args:
+        dictionary (dict): The dictionary to pretty print.
+        key_filter (str): Substring to filter keys. If None, prints the entire dictionary.
+    """
+    # Load the dictionary if input_data is a string
+    if isinstance(input_data, str):
+        input_data = load_file_to_dict(input_data)
+
+    if not isinstance(input_data, dict):
+        raise ValueError("The input must be a dictionary or a valid file path to a JSON/YAML file.")
+
+
+    def search_keys(d: dict, path: str = "") -> list:
+        """
+        Recursively searches for keys containing the filter substring in the dictionary.
+
+        Args:
+            d (dict): Dictionary to search in.
+            path (str): Current path of keys being traversed.
+
+        Returns:
+            list: A list of tuples with (full_key_path, value) for matching keys.
+        """
+        results = []
+        for key, value in d.items():
+            current_path = f"{path}.{key}" if path else key
+            if key_filter is None or key_filter in key:
+                results.append((current_path, value))
+            if isinstance(value, dict):
+                results.extend(search_keys(value, current_path))
+        return results
+
+    # Perform the search
+    matches = search_keys(input_data)
+
+    # Format the results for display
+    if key_filter:
+        if not matches:
+            display(HTML("<b>No matching keys found.</b>"))
+            return
+
+        html_lines = []
+        for path, value in matches:
+            # Highlight the path in blue and the key-value in green
+            html_lines.append(
+                    f"<span style='color:lightblue;'>{path}</span> -> <span style='color:#d4f1d4;'>{value}</span>"
+            )
+        # Join the lines for final display
+        display(HTML("<br>".join(html_lines)))
+    else:
+        # Default pretty printing without filtering
+        pretty_json = dumps(input_data, indent=4, ensure_ascii=False)
+        display(Markdown(f"```json\n{pretty_json}\n```"))
