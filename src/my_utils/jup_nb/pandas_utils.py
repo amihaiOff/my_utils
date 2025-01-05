@@ -11,4 +11,6 @@ def flatten_column_multi_index(self, sep: str = "_") -> pd.DataFrame:
 
 pd.DataFrame.vc = vc
 pd.DataFrame.vcn = vcn
+pd.Series.vc = vc
+pd.Series.vcn = vcn
 pd.DataFrame.flatten_column_multi_index = flatten_column_multi_index
