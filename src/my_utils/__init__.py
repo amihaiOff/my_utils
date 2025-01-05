@@ -4,6 +4,7 @@ from my_utils.readers import *
 
 from IPython.display import Markdown, display
 
+import my_utils.jup_nb.pandas_utils  # sets pandas DataFrame methods
 
 def doc():
     """
