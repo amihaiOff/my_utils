@@ -31,6 +31,11 @@ Welcome to the **MyUtils** guide! Here's what you can find in this package:
 * **sub_dfs**: Stack pandas dataframes side by side with as many rows as needed based on
 * **subplots**: Create a subplot figure from a list of figures with two columns
 
+## DataFrame custom methods
+* **vc**: value_counts alias
+* **vcn**: value_counts with normalize=True
+* **flatten_column_multi_index**: Flatten column multi-index
+
 #### main_ext.py - Jupyter Notebook Extension
 
 """
