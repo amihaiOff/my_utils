@@ -21,4 +21,5 @@ pd.DataFrame.vcn = vcn
 pd.Series.vc = vc
 pd.Series.vcn = vcn
 pd.Series.merge_left_with_ind = merge_left_with_indicator
+pd.DataFrame.merge_left_with_ind = merge_left_with_indicator
 pd.DataFrame.flatten_column_multi_index = flatten_column_multi_index
