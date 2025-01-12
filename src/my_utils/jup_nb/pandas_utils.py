@@ -16,10 +16,19 @@ def merge_left_with_indicator(self, right, drop_ind_col=True, *args, **kwargs):
         return merged.drop(columns='_merge')
     return merged
 
-pd.DataFrame.vc = vc
-pd.DataFrame.vcn = vcn
+def df_min_max(self, col):
+    return self[col].min(), self[col].max()
+
+def series_min_max(self):
+    return self.min(), self.max()
+
 pd.Series.vc = vc
 pd.Series.vcn = vcn
 pd.Series.merge_left_with_indicator = merge_left_with_indicator
+pd.Series.min_max = series_min_max
+
 pd.DataFrame.merge_left_with_indicator = merge_left_with_indicator
 pd.DataFrame.flatten_column_multi_index = flatten_column_multi_index
+pd.DataFrame.min_max = df_min_max
+pd.DataFrame.vc = vc
+pd.DataFrame.vcn = vcn

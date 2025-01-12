@@ -6,6 +6,12 @@ from IPython.display import Markdown, display
 
 import my_utils.jup_nb.pandas_utils  # sets pandas DataFrame methods
 
+try:
+    from icecream import install
+    install()
+except ImportError:
+    print('Icecream not installed')
+
 def doc():
     """
     Make sure the there is no newline after the first triple quotes,
@@ -25,6 +31,7 @@ Welcome to the **MyUtils** guide! Here's what you can find in this package:
 * **DictViewer:** - Display dict values according to dropdown of keys. Useful for dicts of dataframes
 * **GBViewer:** - Group-by viewer - nice display for pandas GroupBy objects in jupyter notebook.
 * **OutputWrapper:** - Useful for converting dataframes to ipywidgets that can be displayed inside a VBox, etc.
+* **catboost_feature_importance**: Return a DataFrame with feature importance from a CatBoost model
 
 ## DataFrame
 * **col_intersect**: Return the intersection of two cols
@@ -36,6 +43,7 @@ Welcome to the **MyUtils** guide! Here's what you can find in this package:
 * **vcn**: value_counts with normalize=True
 * **flatten_column_multi_index**: Flatten column multi-index
 * **merge_left_with_indicator**: Merge two dataframes with a left join and indicator column
+* **df_min_max**: Return the min and max values of a column in a DataFrame
 
 #### main_ext.py - Jupyter Notebook Extension
 

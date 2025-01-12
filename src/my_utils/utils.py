@@ -3,6 +3,7 @@ from typing import Optional, Union
 import pandas as pd
 
 
+
 def safe_divide(a: Union[int, float],
                 b: Union[int,float],
                 div_zero: str = 'zero') -> Optional[float]:
@@ -66,3 +67,12 @@ def grouped(iterable, n=2):
     Collect data into fixed-length chunks or blocks
     """
     return zip(*[iter(iterable)]*n)
+
+def catboost_feature_importance(model):
+    """
+    Return a DataFrame with feature importance from a CatBoost model
+    """
+    return pd.DataFrame({
+        'feature': model.feature_names_,
+        'importance': model.feature_importances_
+    }).sort_values('importance', ascending=False)
