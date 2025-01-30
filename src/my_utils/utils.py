@@ -55,6 +55,12 @@ def pd_df_num_rows(num_rows: int = 60):
     pd.options.display.max_rows = num_rows
 
 
+def pd_df_row_width(row_width: int = 70):
+    """
+    Set the number of rows to display in a DataFrame.
+    """
+    pd.options.display.max_colwidth = row_width
+
 def col_by_kw(df: pd.DataFrame, kw: str):
     """
     Return list of columns in df that contain kw
