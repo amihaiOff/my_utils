@@ -1,5 +1,5 @@
-from my_utils.jup_nb.nb_utils import *
-from my_utils.utils import *
+from .jup_nb.nb_utils import *
+from .utils import *
 from my_utils.readers import *
 
 from IPython.display import Markdown, display
