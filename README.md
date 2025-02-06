@@ -2,19 +2,13 @@
 This repo contains some useful functions for data analysis and visualization.
 
 ## Installation
+Add to zshrc a line adding the repo to python path:
 ```bash
-cd my_utils
-pip install -e .
+export PYTHONPATH=$PYTHONPATH:/path/to/my_utils
 ```
-
-## Usage
+This will make it available to all kernels started from the terminal.
+To make it available to the jupyterlab on my remote ec2, I should add code to the `~/.juniper/jupyter_notebook_config.py`:
 ```python
-from my_utils import read_json
-
-data = read_json('data.json')
+import os
+os.environ['PYTHONPATH'] = os.path.expanduser("~/my_utils/src") + ":" + os.environ.get('PYTHONPATH', '')
 ```
-
-## Jupyter Notebooks
-The repo has a Jupyter notebook extension that runs basic setup code for each notebook. 
-Things like importing libraries, setting up pandas display options, etc.
-
