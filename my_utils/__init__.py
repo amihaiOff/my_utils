@@ -1,6 +1,7 @@
 from .jup_nb.nb_utils import *
 from .utils import *
-from my_utils.readers import *
+from .readers import *
+from .asset_man.asset_manager import *
 
 from IPython.display import Markdown, display
 

@@ -128,4 +128,4 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-src/tesing_playground.ipynb
+my_utils/tesing_playground.ipynb

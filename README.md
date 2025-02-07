@@ -10,5 +10,5 @@ This will make it available to all kernels started from the terminal.
 To make it available to the jupyterlab on my remote ec2, I should add code to the `~/.juniper/jupyter_notebook_config.py`:
 ```python
 import os
-os.environ['PYTHONPATH'] = os.path.expanduser("~/my_utils/src") + ":" + os.environ.get('PYTHONPATH', '')
+os.environ['PYTHONPATH'] = os.path.expanduser("~/my_utils") + ":" + os.environ.get('PYTHONPATH', '')
 ```
