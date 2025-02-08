@@ -1,4 +1,4 @@
-from dataclasses import dataclass, asdict
+from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
 import json
@@ -7,40 +7,8 @@ import uuid
 import shutil
 import pandas as pd
 from typing import Dict, Any
-from enum import Enum
 
-
-# __ALL__ = [
-#     'save_asset', 'load_asset', 'create_group', 'remove_group', 'update_settings',
-#     'get_settings', 'display_assets', 'list_assets', 'update_metadata'
-# ]
-
-
-class AssetType(Enum):
-    PARQUET = "parquet"
-    CSV = "csv"
-    IMAGE = "image"
-    JOBLIB_MODEL = "joblib_model"
-    CATBOOST_MODEL = "catboost_model"
-    OTHER = "other"
-
-    @classmethod
-    def from_string(cls, value: str) -> 'AssetType':
-        """Convert string to enum value, defaulting to OTHER if not found."""
-        try:
-            return cls(value.lower())
-        except ValueError:
-            return cls.OTHER
-
-
-@dataclass
-class AssetMetadata:
-    name: str
-    created_at: datetime
-    asset_type: AssetType
-    description: str
-    custom_metadata: Dict[str, Any]
-    relative_path: str
+from my_utils.asset_man.asset_man_helpers import AssetMetadata, AssetType, color_rows_by_group
 
 
 def get_settings() -> Dict[str, Any]:
@@ -172,6 +140,7 @@ def save_asset(
     # Save metadata
     asset_metadata = AssetMetadata(
             name=name,
+            group=group,
             created_at=datetime.now(),
             asset_type=asset_type,
             description=description,
@@ -179,7 +148,7 @@ def save_asset(
             relative_path=relative_path
     )
 
-    metadata[name] = asdict(asset_metadata)
+    metadata[f'{group}_{name}'] = asdict(asset_metadata)
     _save_metadata(metadata)
 
 
@@ -228,16 +197,19 @@ def load_asset(name: str, load_function: callable = None) -> Any:
 def list_assets() -> pd.DataFrame:
     """Display all assets in a formatted table."""
     _initialize_storage()
+    sync_metadata()
     metadata = _load_metadata()
     if not metadata:
-        return pd.DataFrame(columns=['name', 'created_at', 'asset_type', 'description',
-                                     'relative_path', 'custom_metadata'])
+        return pd.DataFrame(columns=['group', 'name', 'created_at', 'asset_type',
+                                     'description', 'relative_path', 'custom_metadata'])
 
     # Convert metadata to a list of dictionaries
     assets_list = []
     for name, data in metadata.items():
+        name_str = '_'.join(name.split('_')[1:])
         asset_dict = {
-            'name':          name,
+            'group':         data['group'],
+            'name':          name_str,
             'created_at':    data['created_at'],
             'asset_type':    data['asset_type'].value,
             'description':   data['description'],
@@ -248,7 +220,7 @@ def list_assets() -> pd.DataFrame:
             asset_dict[f'custom_{key}'] = value
         assets_list.append(asset_dict)
 
-    return pd.DataFrame(assets_list)
+    return color_rows_by_group(pd.DataFrame(assets_list).sort_values(['group', 'name']))
 
 
 def update_metadata(name: str, **kwargs):
@@ -292,7 +264,32 @@ def remove_group(group_name: str):
 
     group_path.rmdir()
 
+def sync_metadata():
+    """ Synchronize metadata and delete assets from metadata that no longer exist"""
+    _initialize_storage()
+    metadata = _load_metadata()
+    metadata_copy = metadata.copy()
+    for name, data in metadata_copy.items():
+        file_path = _get_root_path() / data['relative_path']
+        if not file_path.exists():
+            del metadata[name]
+    _save_metadata(metadata)
 
+def delete_asset(name: str):
+    """Delete an asset by name."""
+    _initialize_storage()
+    metadata = _load_metadata()
+    if name not in metadata:
+        raise ValueError(f"Asset '{name}' not found")
+
+    # Delete the asset file
+    file_path = _get_root_path() / metadata[name]['relative_path']
+    if file_path.exists():
+        file_path.unlink()
+
+    # Delete the metadata entry
+    del metadata[name]
+    _save_metadata(metadata)
 
 def update_settings(new_root_path: str):
     """Update the root path and migrate existing assets."""
@@ -315,32 +312,6 @@ def update_settings(new_root_path: str):
 
     # Update root path
     _settings['root_path'] = new_root
-
-
-def list_assets() -> pd.DataFrame:
-    """Display all assets in a formatted table."""
-    _initialize_storage()
-    metadata = _load_metadata()
-    if not metadata:
-        return pd.DataFrame(columns=['name', 'created_at', 'asset_type', 'description',
-                                     'relative_path', 'custom_metadata'])
-
-    # Convert metadata to a list of dictionaries
-    assets_list = []
-    for name, data in metadata.items():
-        asset_dict = {
-            'name':          name,
-            'created_at':    data['created_at'],
-            'asset_type':    data['asset_type'].value,
-            'description':   data['description'],
-            'relative_path': data['relative_path']
-        }
-        # Add custom metadata as separate columns
-        for key, value in data['custom_metadata'].items():
-            asset_dict[f'custom_{key}'] = value
-        assets_list.append(asset_dict)
-
-    return pd.DataFrame(assets_list)
 
 
 def display_assets():
