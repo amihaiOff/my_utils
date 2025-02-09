@@ -3,7 +3,6 @@ from datetime import datetime
 from pathlib import Path
 import json
 import os
-import uuid
 import shutil
 import pandas as pd
 from typing import Dict, Any
@@ -18,13 +17,8 @@ def get_settings() -> Dict[str, Any]:
     with open(settings_fpath, 'r') as f:
         return json.load(f)
 
-def get_root_by_machine():
-    settings = get_settings()
-    current_machine = str(uuid.getnode())
-    return settings['assets_root'][current_machine]
-
 # Global settings
-_settings = {'root_path': get_root_by_machine()}
+_settings = {'root_path': get_settings()['assets_root']}
 
 
 def _get_root_path() -> Path:
