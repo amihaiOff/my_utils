@@ -150,11 +150,12 @@ def load_asset(name: str, group: Optional[str], load_function: callable = None) 
     """Load an asset by name."""
     _initialize_storage()
     metadata = _load_metadata()
+    if group:
+        name = f"{group}_{name}"
+
     if name not in metadata:
         raise ValueError(f"Asset '{name}' not found")
 
-    if group:
-        name = f"{group}_{name}"
     asset_data = metadata[name]
     file_path = _get_root_path() / asset_data['relative_path']
 
