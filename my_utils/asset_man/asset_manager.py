@@ -200,10 +200,9 @@ def list_assets() -> pd.DataFrame:
     # Convert metadata to a list of dictionaries
     assets_list = []
     for name, data in metadata.items():
-        name_str = '_'.join(name.split('_')[1:])
         asset_dict = {
             'group':         data['group'],
-            'name':          name_str,
+            'name':          name.removeprefix(f"{data['group']}_"),
             'created_at':    data['created_at'],
             'asset_type':    data['asset_type'].value,
             'description':   data['description'],
