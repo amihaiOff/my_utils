@@ -5,7 +5,7 @@ import json
 import os
 import shutil
 import pandas as pd
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from my_utils.asset_man.asset_man_helpers import AssetMetadata, AssetType, color_rows_by_group
 
@@ -146,13 +146,15 @@ def save_asset(
     _save_metadata(metadata)
 
 
-def load_asset(name: str, load_function: callable = None) -> Any:
+def load_asset(name: str, group: Optional[str], load_function: callable = None) -> Any:
     """Load an asset by name."""
     _initialize_storage()
     metadata = _load_metadata()
     if name not in metadata:
         raise ValueError(f"Asset '{name}' not found")
 
+    if group:
+        name = f"{group}_{name}"
     asset_data = metadata[name]
     file_path = _get_root_path() / asset_data['relative_path']
 
