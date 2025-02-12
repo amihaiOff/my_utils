@@ -111,25 +111,23 @@ def save_asset(
     # Save the asset using the appropriate method
     if save_function:
         save_function(asset_data, save_path)
+    elif asset_type == AssetType.PARQUET:
+        if hasattr(asset_data, 'to_parquet'):
+            asset_data.to_parquet(save_path)
+    elif asset_type == AssetType.CSV:
+        if hasattr(asset_data, 'to_csv'):
+            asset_data.to_csv(save_path)
+    elif asset_type == AssetType.JOBLIB_MODEL:
+        import joblib
+        joblib.dump(asset_data, save_path)
+    elif asset_type == AssetType.CATBOOST_MODEL:
+        # Save CatBoost model - will raise error if model is not a CatBoost model
+        save_path = str(save_path)  # CatBoost expects string path
+        if not save_path.endswith('.cbm'):
+            save_path += '.cbm'
+        asset_data.save_model(save_path)
     else:
-        # Default saving behavior based on asset_type
-        if asset_type == AssetType.PARQUET:
-            if hasattr(asset_data, 'to_parquet'):
-                asset_data.to_parquet(save_path)
-        elif asset_type == AssetType.CSV:
-            if hasattr(asset_data, 'to_csv'):
-                asset_data.to_csv(save_path)
-        elif asset_type == AssetType.JOBLIB_MODEL:
-            import joblib
-            joblib.dump(asset_data, save_path)
-        elif asset_type == AssetType.CATBOOST_MODEL:
-            # Save CatBoost model - will raise error if model is not a CatBoost model
-            save_path = str(save_path)  # CatBoost expects string path
-            if not save_path.endswith('.cbm'):
-                save_path += '.cbm'
-            asset_data.save_model(save_path)
-        else:
-            raise ValueError('Unknown file type')
+        raise ValueError('Unknown file type')
 
     # Save metadata
     asset_metadata = AssetMetadata(
