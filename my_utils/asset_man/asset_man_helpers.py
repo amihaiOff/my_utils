@@ -49,7 +49,7 @@ class AssetType(Enum):
 class AssetMetadata:
     name: str
     group: str
-    created_at: datetime
+    created_at: str
     asset_type: AssetType
     description: str
     custom_metadata: Dict[str, Any]

@@ -74,7 +74,7 @@ def _save_metadata(metadata: Dict[str, Dict]):
 def save_asset(
         asset_data: Any,
         name: str,
-        asset_type: AssetType,
+        asset_type: Optional[AssetType] = None,
         description: str = "",
         group: str = None,
         custom_metadata: Dict[str, Any] = None,
@@ -98,6 +98,14 @@ def save_asset(
     # Convert string asset_type to enum if necessary
     if isinstance(asset_type, str):
         asset_type = AssetType.from_string(asset_type)
+
+    if asset_type is None:
+       if hasattr(asset_data, 'to_parquet'):
+          asset_type = AssetType.PARQUET
+       elif hasattr(asset_data, 'to_csv'):
+            asset_type = AssetType.CSV
+       elif hasattr(asset_data, 'save_model'):
+            asset_type = AssetType.CATBOOST_MODEL
 
     # Determine the save path
     relative_path = name
@@ -133,7 +141,7 @@ def save_asset(
     asset_metadata = AssetMetadata(
             name=name,
             group=group,
-            created_at=datetime.now(),
+            created_at=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             asset_type=asset_type,
             description=description,
             custom_metadata=custom_metadata or {},
@@ -189,7 +197,7 @@ def load_asset(name: str, group: Optional[str], load_function: callable = None) 
             return f.read()
 
 
-def list_assets() -> pd.DataFrame:
+def list_assets(group_name: Optional[str]) -> pd.DataFrame:
     """Display all assets in a formatted table."""
     _initialize_storage()
     sync_metadata()
@@ -213,6 +221,9 @@ def list_assets() -> pd.DataFrame:
         for key, value in data['custom_metadata'].items():
             asset_dict[f'custom_{key}'] = value
         assets_list.append(asset_dict)
+
+    if group_name:
+        assets_list = [asset for asset in assets_list if asset['group'] == group_name]
 
     return color_rows_by_group(pd.DataFrame(assets_list).sort_values(['group', 'name']))
 
@@ -308,114 +319,7 @@ def update_settings(new_root_path: str):
     _settings['root_path'] = new_root
 
 
-def display_assets():
-    """
-    Display assets in a nicely formatted HTML table in Jupyter notebook.
-    Uses only built-in packages and IPython's HTML display.
-    """
-    try:
-        from IPython.display import HTML, display
-    except ImportError:
-        print("This function is designed to work in Jupyter notebooks only.")
-        return
-
-    # Get assets dataframe
-    df = list_assets()
-
-    if len(df) == 0:
-        display(HTML("<p>No assets found.</p>"))
-        return
-
-    # Format datetime column
-    df['created_at'] = df['created_at'].dt.strftime('%Y-%m-%d %H:%M:%S')
-
-    # Generate CSS styles
-    styles = """
-    <style>
-        .assets-table {
-            border-collapse: collapse;
-            margin: 25px 0;
-            font-size: 0.9em;
-            font-family: sans-serif;
-            min-width: 400px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
-            width: 100%;
-        }
-        .assets-table thead tr {
-            background-color: #009879;
-            color: #ffffff;
-            text-align: left;
-        }
-        .assets-table th,
-        .assets-table td {
-            padding: 12px 15px;
-            max-width: 200px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .assets-table tbody tr {
-            border-bottom: 1px solid #dddddd;
-        }
-        .assets-table tbody tr:nth-of-type(even) {
-            background-color: #f3f3f3;
-        }
-        .assets-table tbody tr:last-of-type {
-            border-bottom: 2px solid #009879;
-        }
-        .assets-table tbody tr:hover {
-            background-color: #f5f5f5;
-        }
-        .timestamp {
-            color: #666;
-            font-size: 0.9em;
-        }
-        .asset-type {
-            font-weight: 500;
-            color: #2c5282;
-        }
-        .description {
-            color: #444;
-        }
-        .path {
-            font-family: monospace;
-            font-size: 0.9em;
-            color: #666;
-        }
-    </style>
-    """
-
-    # Generate HTML table
-    html_table = f"{styles}<table class='assets-table'>\n"
-
-    # Add headers
-    html_table += "<thead>\n<tr>\n"
-    for col in df.columns:
-        # Convert column names to title case and replace underscores
-        header = col.replace('_', ' ').title()
-        html_table += f"<th>{header}</th>\n"
-    html_table += "</tr>\n</thead>\n"
-
-    # Add body
-    html_table += "<tbody>\n"
-    for _, row in df.iterrows():
-        html_table += "<tr>\n"
-        for col in df.columns:
-            value = row[col]
-            # Apply specific styling based on column type
-            if col == 'created_at':
-                cell_content = f"<span class='timestamp'>{value}</span>"
-            elif col == 'asset_type':
-                cell_content = f"<span class='asset-type'>{value}</span>"
-            elif col == 'description':
-                cell_content = f"<span class='description'>{value}</span>"
-            elif col == 'relative_path':
-                cell_content = f"<span class='path'>{value}</span>"
-            else:
-                cell_content = value
-            html_table += f"<td>{cell_content}</td>\n"
-        html_table += "</tr>\n"
-    html_table += "</tbody>\n</table>"
-
-    # Display the table
-    display(HTML(html_table))
+def list_groups():
+    """List all asset groups."""
+    _initialize_storage()
+    return [item.name for item in _get_root_path().iterdir() if item.is_dir()]
